@@ -21,19 +21,19 @@ class WebsiteRepo(Repo):
     def __init__(self):
         super().__init__()
         with self.con as c:
-            c.execute('CREATE TABLE IF NOT EXISTS websites (url text unique)')
+            c.execute('CREATE TABLE IF NOT EXISTS websites (url text unique, depth int)')
 
     def get_all(self):
         with self.con as c:
             return c.execute('SELECT rowid, * FROM websites').fetchall()
 
-    def put(self, url):
+    def put(self, url, depth):
         with self.con as c:
-            c.execute('INSERT OR IGNORE INTO websites VALUES (?)', (url,))
+            c.execute('INSERT OR IGNORE INTO websites VALUES (?, ?)', (url, depth))
 
-    def remove(self, url):
+    def remove(self, rowid):
         with self.con as c:
-            c.execute('DELETE FROM websites WHERE url = ?', (url,))
+            c.execute('DELETE FROM websites WHERE rowid = ?', (rowid,))
 
 
 class ThemeRepo(Repo):
@@ -50,9 +50,9 @@ class ThemeRepo(Repo):
         with self.con as c:
             c.execute('INSERT OR REPLACE INTO themes VALUES (?, ?)', (name, keywords))
 
-    def remove(self, name):
+    def remove(self, rowid):
         with self.con as c:
-            c.execute('DELETE FROM themes WHERE name = ?', (name,))
+            c.execute('DELETE FROM themes WHERE rowid = ?', (rowid,))
 
 
 class MonitoringRepo(Repo):
@@ -63,7 +63,7 @@ class MonitoringRepo(Repo):
 
     def get_all(self):
         with self.con as c:
-            return c.execute('SELECT * FROM monitoring').fetchall()
+            return c.execute('SELECT rowid, * FROM monitoring').fetchall()
 
     def put(self, url, theme):
         timestamp = datetime.now()
