@@ -22,6 +22,7 @@ class MonitoringFrame(Frame):
         monitoring = add_pane(parent, 'Monitoring')
         self.add_inputs(monitoring)
         self.tree = self.add_tree(monitoring)
+        self.repopulate_from_repo()
 
     def add_inputs(self, parent):
         inputs = ttk.Frame(parent, heigh=10, padding="3 3 12 12")
@@ -54,12 +55,16 @@ class MonitoringFrame(Frame):
             self.add_row(rowid, timestamp, url, theme)
 
     def repopulate_from_repo_ranged(self):
-        from_date = datetime.strptime(self.from_date.get(), '%Y-%m-%d').date()
-        to_date = datetime.strptime(self.to_date.get(), '%Y-%m-%d').date()
-        self.tree.delete(*self.tree.get_children())
-        records = self.repo.get_range(from_date, to_date)
-        for rowid, timestamp, url, theme in records:
-            self.add_row(rowid, timestamp, url, theme)
+        try:
+            from_date = datetime.strptime(self.from_date.get(), '%Y-%m-%d').date()
+            to_date = datetime.strptime(self.to_date.get(), '%Y-%m-%d').date()
+            self.tree.delete(*self.tree.get_children())
+            records = self.repo.get_range(from_date, to_date)
+            for rowid, timestamp, url, theme in records:
+                self.add_row(rowid, timestamp, url, theme)
+        except ValueError:
+            # Ignore malformed input
+            pass
 
 
 class WebsitesFrame(Frame):
@@ -72,6 +77,7 @@ class WebsitesFrame(Frame):
         websites = add_pane(parent, 'Websites')
         self.add_inputs(websites)
         self.tree = self.add_tree(websites)
+        self.repopulate_from_repo()
 
     def add_inputs(self, parent):
         inputs = ttk.Frame(parent, heigh=10, padding="3 3 12 12")
@@ -96,11 +102,15 @@ class WebsitesFrame(Frame):
         self.tree.insert('', 'end', rowid, values=[url, depth])
 
     def add_website(self):
-        url = self.new_url.get()
-        depth = self.new_depth.get()
-        if url and depth > 0:
-            self.repo.put(url, depth)
-            self.repopulate_from_repo()
+        try:
+            url = self.new_url.get()
+            depth = max(1, min(self.new_depth.get(), 10))  # Clamp depth value to 0..10
+            if url:
+                self.repo.put(url, depth)
+                self.repopulate_from_repo()
+        except TclError:
+            # Ignore malformed input
+            pass
 
     def remove_website(self):
         selected = self.tree.selection()
@@ -125,6 +135,7 @@ class ThemesFrame(Frame):
         themes = add_pane(parent, 'Themes')
         self.add_inputs(themes)
         self.tree = self.add_tree(themes)
+        self.repopulate_from_repo()
 
     def add_inputs(self, parent):
         inputs = ttk.Frame(parent, heigh=10, padding="3 3 12 12")

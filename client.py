@@ -16,11 +16,7 @@ def load_example_data():
 
 def main():
     load_example_data()
-    app = App.new(theme_repo, website_repo, monitoring_repo)
-    app.themes.repopulate_from_repo()
-    app.websites.repopulate_from_repo()
-    app.monitoring.repopulate_from_repo()
-    app.draw()
+    App.new(theme_repo, website_repo, monitoring_repo).draw()
 
 
 if __name__ == '__main__':
