@@ -1,4 +1,5 @@
 import ssl
+from datetime import datetime
 from html.parser import HTMLParser
 from urllib import parse
 from urllib.request import urlopen
@@ -62,8 +63,9 @@ class Crawler(object):
                 for word in words:
                     # Check only words with whitespaces as word boundaries
                     if data.find(' ' + word + ' ') > -1:
-                        print('Found {} ({}) in {}'.format(theme, word, url))
-                        self.repo.put(url, theme)
+                        timestamp = datetime.now()
+                        print('{}: found {} ({}) in {}'.format(timestamp, theme, word, url))
+                        self.repo.put(timestamp, url, theme)
 
             self.visited.add(url)
             self.crawl(links)

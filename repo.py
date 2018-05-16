@@ -1,6 +1,5 @@
 import pickle
 import sqlite3
-from datetime import datetime
 
 
 def adapt_pickle(items):
@@ -29,7 +28,9 @@ class WebsiteRepo(Repo):
 
     def put(self, url, depth):
         with self.con as c:
-            c.execute('INSERT OR IGNORE INTO websites VALUES (?, ?)', (url, depth))
+            cur = c.cursor()
+            cur.execute('INSERT OR REPLACE INTO websites VALUES (?, ?)', (url, depth))
+            return cur.lastrowid
 
     def remove(self, rowid):
         with self.con as c:
@@ -48,7 +49,9 @@ class ThemeRepo(Repo):
 
     def put(self, name, keywords):
         with self.con as c:
-            c.execute('INSERT OR REPLACE INTO themes VALUES (?, ?)', (name, keywords))
+            cur = c.cursor()
+            cur.execute('INSERT OR REPLACE INTO themes VALUES (?, ?)', (name, keywords))
+            return cur.lastrowid
 
     def remove(self, rowid):
         with self.con as c:
@@ -65,7 +68,13 @@ class MonitoringRepo(Repo):
         with self.con as c:
             return c.execute('SELECT rowid, * FROM monitoring').fetchall()
 
-    def put(self, url, theme):
-        timestamp = datetime.now()
+    def get_range(self, from_date, to_date):
         with self.con as c:
-            c.execute('INSERT INTO monitoring VALUES (?, ?, ?)', (timestamp, url, theme))
+            return c.execute('SELECT rowid, * FROM monitoring WHERE date(ts) >= ? AND date(ts) <= ?',
+                             (from_date, to_date)).fetchall()
+
+    def put(self, ts, url, theme):
+        with self.con as c:
+            cur = c.cursor()
+            cur.execute('INSERT INTO monitoring VALUES (?, ?, ?)', (ts, url, theme))
+            return cur.lastrowid
